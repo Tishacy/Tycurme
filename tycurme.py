@@ -22,6 +22,17 @@ from matplotlib.widgets import Slider, Button, TextBox, RadioButtons
 
 
 # STANDARD CURVE
+def W_map_func(u):
+    a = [-0.57722, 0.99999, -0.24991, 0.05519, -0.00976, 0.00108]
+    b = [0.26777, 8.63476, 18.05902, 8.57333]
+    c = [3.95850, 21.09965, 25.63296, 9.57332]
+    if u <= 1:
+        W = -np.log(u)+ a[0] + a[1]*u + a[2]*u**2 + a[3]*u**3 + a[4]*u**4 + a[5]*u**5
+    else:
+        W = 1/(u*np.exp(u))*(b[0]+b[1]*u+b[2]*u**2+b[3]*u**3+u**4)/(c[0]+c[1]*u+c[2]*u**2+c[3]*u**3+u**4)
+    return W
+    # return -0.577216-np.log(u)
+
 def W(ua):
     """
     returns the value of well function when given
@@ -30,20 +41,12 @@ def W(ua):
     function.
     """
     #return -0.577216-np.log(ua)
-    a = [-0.57722, 0.99999, -0.24991, 0.05519, -0.00976, 0.00108]
-    b = [0.26777, 8.63476, 18.05902, 8.57333]
-    c = [3.95850, 21.09965, 25.63296, 9.57332]
+
     try:
         len(ua)
     except:
         ua = np.array([ua])
-    Ws = []
-    for u in ua:
-        if u <= 1:
-            W = -np.log(u)+ a[0] + a[1]*u + a[2]*u**2 + a[3]*u**3 + a[4]*u**4 + a[5]*u**5
-        else:
-            W = 1/(u*np.exp(u))*(b[0]+b[1]*u+b[2]*u**2+b[3]*u**3+u**4)/(c[0]+c[1]*u+c[2]*u**2+c[3]*u**3+u**4)        
-        Ws.append(W)
+    Ws = list(map(W_map_func, ua))
     return np.array(Ws)
 
 
@@ -66,10 +69,7 @@ def ex_data():
     s = np.reshape(np.transpose(df[r].values), (1, -1))[0]
     Q = df["Q(m3/h)"].values
     
-    t_r2 = []
-    for r_i in r:
-        t_r2.append(t/r_i**2)
-    t_r2 = np.reshape(np.array(t_r2), (1, -1))[0]
+    t_r2 = np.reshape(np.array([t/r_i**2 for r_i in r]), (1, -1))[0]
     
     # data clean (drop the NAN values and 0)
     cl_df = pd.DataFrame(dict(a=t_r2, b=s)).dropna()
@@ -83,7 +83,7 @@ def ex_data():
 def AutoFit(t_r2, s, algorithm):
     """
     fitting algorithm
-        the loss function is RMSE(Root-Mean-Squared Error) between
+        the loss function is RMSE (Root-Mean-Squared Error) between
         the experimental data and standard curve.
     returns the optimal x_bias, y_bias and the optimized RMSE
     """
@@ -213,12 +213,12 @@ def run_AutoFit(algorithm):
     x_bias, y_bias, RMSE = AutoFit(t_r2, s, algorithm)
     W_p, rac_u_p, s_p, t_r2_p, T, S = calResult(t_r2, s, Q, x_bias, y_bias, num=2)
     
-##    # print the results
-##    print("======== Auto Fit Results ========")
-##    print('    W = %.2f  rac_u = %.2f  s = %.2f  t_r2 = %.4f' %(W_p,rac_u_p,s_p,t_r2_p))
-##    print('    T = %.2f m^3/d  S = %.6f  x_bias = %.2f  y_bias = %.2f' %(T, S, x_bias, y_bias))
-##    print("======== Statistics of Fitting ========")
-##    print("    RMSE = %.4F" %(RMSE))
+    # print the results
+    print("======== Auto Fit Results ========")
+    print('    W = %.2f  rac_u = %.2f  s = %.2f  t_r2 = %.4f' %(W_p,rac_u_p,s_p,t_r2_p))
+    print('    T = %.2f m^3/d  S = %.6f  x_bias = %.2f  y_bias = %.2f' %(T, S, x_bias, y_bias))
+    print("======== Statistics of Fitting ========")
+    print("    RMSE = %.4F" %(RMSE))
     return t_r2, s, Q, x_bias, y_bias, RMSE, W_p, rac_u_p, s_p, t_r2_p, T, S
 
 
@@ -237,6 +237,7 @@ def GUI(algorithm = 0):
     ######## Funtions in GUI ########
     def update(val):
         """ updates the figure using slider"""
+        # print("asdf")
         x_bias = s_xbias.val
         y_bias = s_ybias.val
         t_xbias.set_val(float('%.2f' %x_bias))
@@ -244,8 +245,8 @@ def GUI(algorithm = 0):
         l.set_xdata(t_r2+x_bias)
         l.set_ydata(s+y_bias)
 
+        # fig.canvas.draw_idle()
         chg_result(t_r2, s, x_bias, y_bias)
-        fig.canvas.draw_idle()
 
     def reset(event):
         """ reset the figure """
@@ -255,33 +256,28 @@ def GUI(algorithm = 0):
 
     def dec_x_bias(event):
         """ decrease the x_bias using '-' button """
-        x_bias = s_xbias.val
-        t_xbias.set_val(float('%.2f' %(x_bias-0.01)))
+        s_xbias.set_val(float('%.2f' % (s_xbias.val-0.01)))
 
     def inc_x_bias(event):
         """ increase the x_bias using '+' button """
-        x_bias = s_xbias.val
-        t_xbias.set_val(float('%.2f' %(x_bias+0.01)))
+        s_xbias.set_val(float('%.2f' % (s_xbias.val+0.01)))
 
     def dec_y_bias(event):
         """ decrease the y_bias using '-' button """
-        y_bias = s_ybias.val
-        t_ybias.set_val(float('%.2f' %(y_bias-0.01)))
+        s_ybias.set_val(float('%.2f' % (s_ybias.val-0.01)))
 
     def inc_y_bias(event):
         """ increase the y_bias using '+' button """
-        y_bias = s_ybias.val
-        t_ybias.set_val(float('%.2f' %(y_bias+0.01)))
+        s_ybias.set_val(float('%.2f' % (s_ybias.val+0.01)))
     
     def submit_x(text):
         """ updates the figure using textbox (x_bias)"""
-        x_bias = float('%.2f' %float(text))
-        s_xbias.set_val(x_bias)
+        s_xbias.set_val(float('%.2f' % (float(text))))
 
     def submit_y(text):
         """ updates the figure using textbox (y_bias)"""
-        y_bias = float('%.2f' %float(text))
-        s_ybias.set_val(y_bias)
+        s_ybias.set_val(float('%.2f' % (float(text))))
+
 
     def chg_result(t_r2, s, x_bias, y_bias):
         """ change the results in the results zone """
@@ -311,7 +307,7 @@ def GUI(algorithm = 0):
     ax = fig.add_subplot(1,1,1)
     plt.subplots_adjust(bottom=0.42, left=0.18, right=0.65)
 
-    rec_u, W_std = W_u_std(1e-8, 10, 1e-4)
+    rec_u, W_std = W_u_std(1e-8, 10, 0.01)
     l, = plt.plot(t_r2+x_bias, s+y_bias, 's', color='maroon',
                   markersize=5, label='measurement data')
     plt.plot(rec_u, W_std, color='k',
