@@ -1,9 +1,10 @@
-<p style="text-align:center; font-family: Georgia; font-style: italic; font-size:45px; font-weight: 700; margin-bottom: 0px">Tycurme</p>
+<h1 style="text-align:center; font-family: Georgia; font-style: italic; font-size:45px; font-weight: 700; margin-bottom: 0px">Tycurme</h1>
 <p style="text-align:center; color:#999; font-family: Georgia; font-style: italic; margin-top: 0px;">Theis 配线法自动拟合程序</p>
 <ul style="text-align:left; color:#999; font-family: Georgia; margin:0 0 0 350px; text-decoration:none; padding:0;">
     <li>author: TIANShuo</li>    
     <li>date: 2018/6/12</li>
 </ul>
+
 ## 操作环境
 
 - python 3.0及其以上版本
