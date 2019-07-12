@@ -11,8 +11,8 @@
 - 依赖库：
 	```bash
 	pandas>=0.24.2
-	matplotlib>=3.0.1
-	numpy>=1.13.3
+	matplotlib>=3.1.1
+	numpy>=1.16.4
 	```
 	安装依赖：
 	```bash
